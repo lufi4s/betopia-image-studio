@@ -3,20 +3,25 @@
 const fs = require('fs');
 const path = require('path');
 
-// Load .env BEFORE any module reads config. Values defined in the project .env
-// take precedence over inherited shell/machine environment variables, so
-// credentials in .env always win.
-try {
-  const envPath = path.join(__dirname, '..', '.env');
-  if (fs.existsSync(envPath)) {
+// Load .env / .env.local BEFORE any module reads config. Values defined in the
+// project files take precedence over inherited shell/machine environment
+// variables, and .env.local wins over .env — so the real API key lives in the
+// gitignored .env.local while the committed .env stays key-free.
+function loadEnvFile(name) {
+  try {
+    const envPath = path.join(__dirname, '..', name);
+    if (!fs.existsSync(envPath)) return;
     for (const line of fs.readFileSync(envPath, 'utf8').split(/\r?\n/)) {
       const m = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/);
       if (m) process.env[m[1]] = m[2].replace(/^(["'])(.*)\1$/, '$2');
     }
+  } catch (err) {
+    console.warn(`[env] could not read ${name}:`, err.message);
   }
-} catch (err) {
-  console.warn('[env] could not read .env:', err.message);
 }
+
+loadEnvFile('.env');
+loadEnvFile('.env.local');
 
 const express = require('express');
 const betopia = require('./betopia');

@@ -3,5 +3,6 @@ dist/
 .astro/
 data/
 .env
+.env.local
 *.log
 .netlify/

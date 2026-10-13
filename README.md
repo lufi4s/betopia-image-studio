@@ -38,19 +38,29 @@ Optional: `npm run astro` starts Astro's own dev server (HMR) — it falls back 
 
 ## Configuration
 
-Credentials live in `.env` (never committed, never sent to the browser):
+The committed `.env` holds only non-secret defaults. **The API key never belongs in it** — the
+repo is public, so the real key lives in `.env.local` (gitignored) or in the host's environment
+variables:
+
+| Where | Contents | Committed? |
+| ----- | -------- | ---------- |
+| `.env` | base URL, model, port, timeout | yes |
+| `.env.local` | `BETOPIA_API_KEY=sk-llm-...` for local dev | no — gitignored |
+| Netlify → Environment variables | `BETOPIA_API_KEY` for the deployed site | no |
 
 ```env
+# .env — committed, no secrets
 BETOPIA_BASE_URL=https://models.betopiacloud.com/image/v1
-BETOPIA_API_KEY=sk-llm-...
 BETOPIA_MODEL=qwen-image-2.1-turbo
 PORT=4321
 GENERATION_TIMEOUT_MS=180000
+
+# .env.local — gitignored, your key
+BETOPIA_API_KEY=sk-llm-...
 ```
 
-Copy `.env.example` to `.env` to start fresh. Values in `.env` override inherited shell/machine
-environment variables, so credentials in `.env` always win. The key is only used server-side by
-`server/betopia.js`.
+Both files override inherited shell/machine environment variables, and `.env.local` wins over
+`.env`. The key is only used server-side by `server/betopia.js` and the Netlify function.
 
 ## Deploying to Netlify
 
