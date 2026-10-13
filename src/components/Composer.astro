@@ -1,0 +1,61 @@
+<section class="composer-wrap shell">
+  <div class="composer">
+    <div class="composer-input">
+      <label class="eyebrow" for="prompt">Your prompt</label>
+      <textarea
+        id="prompt"
+        rows="4"
+        maxlength="2000"
+        placeholder="Describe what you want to see…  e.g. A cozy cabin in a snowy pine forest at dawn, warm light glowing through the windows"
+      ></textarea>
+    </div>
+
+    <div class="composer-tools">
+      <span class="style-label">Style</span>
+      <div class="style-chips" id="styleChips"></div>
+      <span class="hint push" id="promptCount">0 / 2000</span>
+      <button class="ghost-btn" id="surpriseBtn" type="button" title="Random prompt idea">🎲 Surprise</button>
+    </div>
+
+    <div class="advanced" id="advPanel" hidden>
+      <div class="advanced-grid">
+        <div class="field">
+          <label for="negativePrompt">Negative prompt</label>
+          <textarea
+            id="negativePrompt"
+            rows="3"
+            maxlength="1000"
+            placeholder="Things to avoid — blurry, low quality, distorted, watermark, text"></textarea>
+        </div>
+        <div class="field">
+          <label for="seed">Seed</label>
+          <input id="seed" type="number" min="0" max="2147483647" placeholder="Random" />
+          <p class="hint field-hint">Reuse a seed to reproduce the same image.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-group">
+        <div class="control">
+          <span class="control-label">Ratio</span>
+          <div class="segmented" id="ratioGroup"></div>
+        </div>
+        <div class="control">
+          <span class="control-label">Images</span>
+          <div class="segmented" id="countGroup"></div>
+        </div>
+      </div>
+
+      <div class="toolbar-group">
+        <button class="ghost-btn" id="advToggle" type="button" aria-expanded="false">Advanced</button>
+        <button class="primary-btn" id="generateBtn" type="button">
+          <span class="bar" aria-hidden="true"></span>
+          <span class="btn-label">✦ Generate</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <p class="status-line" id="statusLine">Ready when you are.</p>
+</section>

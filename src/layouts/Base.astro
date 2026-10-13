@@ -1,0 +1,55 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+}
+
+const { title = 'Betopia Image Studio — Text to Image' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta
+      name="description"
+      content="Turn any text prompt into images with the Betopia Cloud qwen-image-2.1-turbo model."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Outfit:wght@300..700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <header class="site-header">
+      <div class="shell">
+        <a class="brand" href="/">
+          <span class="brand-mark">✦</span>
+          <span>Betopia Image Studio</span>
+        </a>
+        <div class="header-meta">
+          <span class="chip-badge hide-sm">
+            <span class="dot" id="modelDot"></span>
+            <span id="modelBadge">connecting…</span>
+          </span>
+          <span class="chip-badge" id="statBadge">0 images</span>
+        </div>
+      </div>
+    </header>
+
+    <slot />
+
+    <footer class="site-footer">
+      Powered by <span>Betopia Cloud</span> · <span id="footModel">qwen-image-2.1-turbo</span>
+    </footer>
+
+    <div class="toasts" id="toasts"></div>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "name": "betopia-image-studio",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Text-to-image generation platform (Astro UI + Express API) powered by Betopia Cloud",
+  "main": "server/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "dev:api": "node --watch --watch-path=server server/index.js",
+    "dev:web": "astro dev",
+    "build": "astro build",
+    "start": "node server/index.js",
+    "prestart": "npm run build"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cookie": "^2.0.1",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "astro": "^7.3.8"
+  }
+}

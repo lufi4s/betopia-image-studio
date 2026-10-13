@@ -1,0 +1,27 @@
+---
+import Base from '../layouts/Base.astro';
+import Composer from '../components/Composer.astro';
+import Gallery from '../components/Gallery.astro';
+import Lightbox from '../components/Lightbox.astro';
+---
+
+<Base>
+  <main>
+    <section class="hero shell">
+      <span class="eyebrow">Text to Image Studio</span>
+      <h1>Turn words into <span class="accent">images</span></h1>
+      <p class="lead">
+        Describe anything — <strong id="heroModel">qwen-image-2.1-turbo</strong> paints it in seconds.
+      </p>
+    </section>
+
+    <Composer />
+    <Gallery />
+  </main>
+
+  <Lightbox />
+</Base>
+
+<script>
+  import '../scripts/app.js';
+</script>

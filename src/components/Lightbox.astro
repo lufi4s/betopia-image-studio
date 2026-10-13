@@ -1,0 +1,20 @@
+<div class="lightbox" id="lightbox" hidden>
+  <button class="lb-close" id="lbClose" aria-label="Close">✕</button>
+  <button class="lb-nav lb-prev" id="lbPrev" aria-label="Previous image">‹</button>
+
+  <div class="lb-dialog" role="dialog" aria-modal="true">
+    <img id="lbImage" alt="" />
+    <div class="lb-info">
+      <p class="lb-prompt" id="lbPrompt"></p>
+      <p class="lb-meta" id="lbMeta"></p>
+      <div class="lb-actions">
+        <button class="secondary-btn" id="lbDownload" type="button">↓ Download</button>
+        <button class="secondary-btn" id="lbReuse" type="button">↺ Use prompt</button>
+        <button class="secondary-btn" id="lbCopy" type="button">⧉ Copy prompt</button>
+        <button class="secondary-btn danger" id="lbDelete" type="button">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="lb-nav lb-next" id="lbNext" aria-label="Next image">›</button>
+</div>
