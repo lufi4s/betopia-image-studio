@@ -52,6 +52,42 @@ Copy `.env.example` to `.env` to start fresh. Values in `.env` override inherite
 environment variables, so credentials in `.env` always win. The key is only used server-side by
 `server/betopia.js`.
 
+## Deploying to Netlify
+
+The repo is wired for Netlify: push to GitHub and the site builds `/dist` and deploys a single
+function that serves the API and the generated images on the same URL.
+
+1. Connect the GitHub repo to a Netlify site — build settings come from `netlify.toml`.
+2. In **Site configuration → Environment variables** add:
+
+   | Variable | Required | Value |
+   | -------- | -------- | ----- |
+   | `BETOPIA_API_KEY` | yes | your `sk-llm-...` key |
+   | `BETOPIA_BASE_URL` | no | `https://models.betopiacloud.com/image/v1` (default) |
+   | `BETOPIA_MODEL` | no | `qwen-image-2.1-turbo` (default) |
+   | `GENERATION_TIMEOUT_MS` | no | `55000` (default — Netlify's hard sync limit is 60s) |
+
+3. Deploy. Every push to `main` redeploys automatically.
+
+How the deployed version maps to the local one:
+
+| Local (Express) | Deployed (Netlify) |
+| --------------- | ------------------ |
+| `server/index.js` routes | `netlify/functions/app.mjs` — one function for `path: ['/api/*', '/images/*']` |
+| `data/images/*.png` on disk | PNGs in a Netlify **Blobs** store named `gallery` (survive redeploys) |
+| `data/gallery.json` index | a single `index` blob holding the JSON array |
+| `server/betopia.js`, `server/validate.js` | shared — imported by both runtimes |
+
+Test the deployed runtime locally:
+
+```bash
+npx netlify-cli dev   # http://localhost:8888 — dist + function + Blobs emulator
+```
+
+Deployed behaviour differs slightly: the gallery keeps the newest **200** records (500 locally) to
+keep the index blob light, Blobs writes are last-write-wins if two generations land at the same
+instant, and the rate limit is per function instance (best effort).
+
 ## Features
 
 - **Text → image** with prompt, negative prompt, aspect ratio (1:1, 3:2, 2:3, 16:9, 9:16),
@@ -79,6 +115,10 @@ server/
   index.js                Express app: routes, validation, rate limit, serves /dist
   betopia.js              Betopia Cloud API client
   store.js                File-backed gallery (data/images + data/gallery.json)
+  validate.js             Request validation shared with the Netlify function
+netlify/
+  functions/app.mjs       Deployed API: /api/* + /images/* on Netlify Blobs
+netlify.toml              Netlify build, function and dev settings
 scripts/dev.js            API watch + Astro rebuild watcher + auto browser reload
 public/favicon.svg        Copied into the build
 data/                     Generated images + gallery index (gitignored)

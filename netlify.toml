@@ -1,0 +1,21 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[dev]
+  # Local emulation: `npx netlify-cli dev` serves dist + functions + Blobs on :8888
+  framework = "#static"
+  publish = "dist"
+  port = 8888
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+  # API calls to the image model take 5-30s; the sync limit is 60s.
+  # (Set GENERATION_TIMEOUT_MS in the Netlify UI to stay under it.)
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
