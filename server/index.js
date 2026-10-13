@@ -185,6 +185,17 @@ app.get('/api/stats', (req, res) => res.json(store.stats()));
 /* ------------------------------------------------------------------ */
 app.use('/images', express.static(store.IMAGES_DIR, { maxAge: '30d', immutable: true }));
 
+// Build stamp used by the dev auto-reload snippet: changes whenever /dist rebuilds.
+app.get('/__buildid', (req, res) => {
+  let stamp = 0;
+  try {
+    stamp = Math.round(fs.statSync(INDEX_FILE).mtimeMs);
+  } catch {
+    stamp = 0;
+  }
+  res.set('Cache-Control', 'no-store').type('text/plain').send(String(stamp));
+});
+
 if (!fs.existsSync(INDEX_FILE)) {
   console.warn('[ui] dist/index.html not found — run `npm run build` to serve the interface.');
 }

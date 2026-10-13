@@ -11,7 +11,7 @@ negative prompts, seeds, downloads and a lightbox viewer.
 ```bash
 npm install
 npm run build     # build the Astro UI into /dist
-npm start         # serve UI + API on http://localhost:3000
+npm start         # serve UI + API on http://localhost:4321
 ```
 
 ### Development
@@ -20,14 +20,21 @@ npm start         # serve UI + API on http://localhost:3000
 npm run dev
 ```
 
-Runs both processes at once (see `scripts/dev.js`):
+One port, one URL: **http://localhost:4321**
 
-| Service | URL | Notes |
-| ------- | --- | ----- |
-| Astro dev server | **http://localhost:4321** | HMR, proxies `/api` + `/images` to :3000 |
-| Express API | http://localhost:3000 | `node --watch`, restarts on server changes |
+`scripts/dev.js` runs two things together:
 
-Open **http://localhost:4321** while developing.
+| Process | What it does |
+| ------- | ------------ |
+| Express API + static UI | `node --watch` — restarts when anything in `server/` changes |
+| Astro rebuild watcher | reruns `astro build` when `src/`, `public/` or `astro.config.mjs` change |
+
+After a rebuild the open page detects the new build stamp (`/__buildid`) and reloads
+itself — no second port, no manual refresh. The API, UI and generated images all come
+from the same port defined by `PORT` in `.env`.
+
+Optional: `npm run astro` starts Astro's own dev server (HMR) — it falls back to port
+4322 when 4321 is already taken and still proxies `/api` + `/images` to the main server.
 
 ## Configuration
 
@@ -37,7 +44,7 @@ Credentials live in `.env` (never committed, never sent to the browser):
 BETOPIA_BASE_URL=https://models.betopiacloud.com/image/v1
 BETOPIA_API_KEY=sk-llm-...
 BETOPIA_MODEL=qwen-image-2.1-turbo
-PORT=3000
+PORT=4321
 GENERATION_TIMEOUT_MS=180000
 ```
 
@@ -67,12 +74,12 @@ src/
   pages/index.astro       Page assembly
   scripts/app.js          All client logic (bundled by Astro)
   styles/global.css       Dark & refined design system
-astro.config.mjs          Static build → /dist, dev proxy to :3000
+astro.config.mjs          Static build → /dist (single-port setup)
 server/
   index.js                Express app: routes, validation, rate limit, serves /dist
   betopia.js              Betopia Cloud API client
   store.js                File-backed gallery (data/images + data/gallery.json)
-scripts/dev.js            Runs API + Astro dev together
+scripts/dev.js            API watch + Astro rebuild watcher + auto browser reload
 public/favicon.svg        Copied into the build
 data/                     Generated images + gallery index (gitignored)
 dist/                     Astro build output (gitignored)
@@ -81,11 +88,11 @@ dist/                     Astro build output (gitignored)
 ## Scripts
 
 ```bash
-npm run dev     # API (watch) + Astro dev server with HMR
-npm run dev:api # API only
-npm run dev:web # Astro dev only
+npm run dev     # API (watch) + Astro rebuild watcher + auto browser reload
+npm run dev:api # API only (no UI rebuilds)
+npm run astro   # optional Astro HMR server (port 4322 if 4321 is busy)
 npm run build   # astro build → /dist
-npm start       # build (prestart) + serve UI & API on :3000
+npm start       # build (prestart) + serve UI & API on :4321
 ```
 
 ## Design system

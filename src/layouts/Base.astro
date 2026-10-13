@@ -51,5 +51,23 @@ const { title = 'Betopia Image Studio — Text to Image' } = Astro.props;
     </footer>
 
     <div class="toasts" id="toasts"></div>
+
+    <script is:inline>
+      // Dev convenience: after `npm run dev` rebuilds /dist, reload automatically.
+      if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+        let seen = null;
+        setInterval(async () => {
+          try {
+            const res = await fetch('/__buildid', { cache: 'no-store' });
+            if (!res.ok) return;
+            const id = (await res.text()).trim();
+            if (seen && seen !== id && id !== '0') location.reload();
+            seen = id;
+          } catch {
+            /* server restarting — keep polling */
+          }
+        }, 1500);
+      }
+    </script>
   </body>
 </html>

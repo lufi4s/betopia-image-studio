@@ -1,11 +1,14 @@
 'use strict';
 
 /**
- * Dev orchestrator: runs the Express API (--watch) and the Astro dev server
- * together, and shuts both down when either one exits.
+ * Dev orchestrator — the whole app runs on ONE port (PORT in .env, default 4321).
  *
- *   API  → http://localhost:3000
- *   Web  → http://localhost:4321  (proxies /api and /images to the API)
+ *   1. Express API + static UI  — `node --watch`, restarts when server/ changes
+ *   2. Astro rebuild watcher    — reruns `astro build` when src/, public/ or the
+ *                                 Astro config change (Astro 7 has no `build --watch`)
+ *
+ * The page polls /__buildid and reloads itself after a rebuild, so there is no
+ * second port and no manual browser refresh.
  */
 
 const { spawn } = require('child_process');
@@ -13,8 +16,16 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.join(__dirname, '..');
+const WATCH_TARGETS = ['src', 'public', 'astro.config.mjs'];
+const REBUILD_DELAY_MS = 350;
+
 const children = [];
+const watchers = [];
 let shuttingDown = false;
+let building = false;
+let buildQueued = false;
+let buildCount = 0;
+let rebuildTimer = null;
 
 function astroEntry() {
   const pkgPath = path.join(root, 'node_modules', 'astro', 'package.json');
@@ -43,9 +54,79 @@ function start(name, command, args) {
   return child;
 }
 
+function runBuild(reason) {
+  if (shuttingDown) return;
+  if (building) {
+    buildQueued = true;
+    return;
+  }
+
+  const entry = astroEntry();
+  if (!entry) {
+    console.error('[dev] Astro is not installed. Run: npm install');
+    shutdown(1);
+    return;
+  }
+
+  building = true;
+  const started = Date.now();
+  const child = spawn(process.execPath, [entry, 'build'], { cwd: root, stdio: 'inherit' });
+
+  const finish = (code) => {
+    building = false;
+    if (code === 0) {
+      buildCount += 1;
+      console.log(`[dev] build #${buildCount} ok in ${Date.now() - started}ms (${reason})`);
+    } else {
+      console.error(`[dev] build FAILED (exit ${code}) — ${reason}`);
+    }
+    if (buildQueued && !shuttingDown) {
+      buildQueued = false;
+      runBuild('queued change');
+    }
+  };
+
+  child.on('exit', (code) => finish(code ?? 1));
+  child.on('error', (err) => {
+    console.error('[dev] could not run astro build:', err.message);
+    finish(1);
+  });
+}
+
+function scheduleBuild(reason) {
+  if (shuttingDown) return;
+  clearTimeout(rebuildTimer);
+  rebuildTimer = setTimeout(() => runBuild(reason), REBUILD_DELAY_MS);
+}
+
+function watchSources() {
+  for (const target of WATCH_TARGETS) {
+    const full = path.join(root, target);
+    if (!fs.existsSync(full)) continue;
+    try {
+      const watcher = fs.watch(full, { recursive: true }, (_event, filename) => {
+        scheduleBuild(filename ? `${target}/${filename}` : target);
+      });
+      watcher.on('error', (err) => console.error(`[dev] watcher error (${target}): ${err.message}`));
+      watchers.push(watcher);
+    } catch (err) {
+      console.error(`[dev] could not watch ${target}: ${err.message}`);
+    }
+  }
+  console.log(`[dev] watching ${WATCH_TARGETS.join(', ')} for changes`);
+}
+
 function shutdown(code) {
   if (shuttingDown) return;
   shuttingDown = true;
+  clearTimeout(rebuildTimer);
+  for (const watcher of watchers) {
+    try {
+      watcher.close();
+    } catch {
+      /* already closed */
+    }
+  }
   for (const child of children) {
     if (child.exitCode === null && !child.killed) {
       try {
@@ -61,12 +142,12 @@ function shutdown(code) {
 process.on('SIGINT', () => shutdown(0));
 process.on('SIGTERM', () => shutdown(0));
 
-const entry = astroEntry();
-if (!entry) {
+if (!astroEntry()) {
   console.error('[dev] Astro is not installed. Run: npm install');
   process.exit(1);
 }
 
-console.log('[dev] starting API (watch) on :3000 and Astro dev on :4321 …');
+console.log('[dev] API + UI on one port (see PORT in .env) — building the interface…');
 start('api', process.execPath, ['--watch', '--watch-path=server', path.join('server', 'index.js')]);
-start('astro', process.execPath, [entry, 'dev']);
+runBuild('initial');
+watchSources();
